@@ -7,25 +7,45 @@ def create_labels_dict(sample_list, labels_df, slice_for_samples = slice(12), ro
       label_dict[sample] = labels_df.loc[row_of_labels_df, sample[slice_for_samples]]
   return label_dict
 
-def create_custom_labels(sample_groups: list, label_dict: dict, sample_ordering, reference_labels = None):
-  #here samples should be inputed as indices in sample ordering. 
-  #sample group is lis of lists
+def create_custom_labels(sample_groups: list, labels: list | dict, sample_ordering: array, reference_labels: dict | None = None):
+  #sample ordering is array with each element being a string corresponding to sample id
+  #here samples should be inputed as indices in sample ordering or as group corresponding to a label in reference labels.
+  #reference_labels dict should be samples_labels_dict - i.e., samples are keys and labels are values. This type of dict should generally be used as input to functions.
+  #sample_groups is list of lists
+
   sample_labels_dict = {}
-  labels  = list(label_dict.keys())
+  if type(labels) == dict:
+    labels  = list(labels.keys())
+  
   used_samples = []
+  if reference_labels is not None:
+    reference_labels = invert_label_dict(reference_labels, original_keys='samples')
 
   if (len(sample_groups) != len(labels)-1) and (len(sample_groups) != len(labels)):
-    raise Warning('mismatch in number of groups and labels')
+    raise Exception('mismatch in number of groups and labels')
 
-  for index, group in enumerate(sample_groups):
-    for sample in group:
-      sample_labels_dict[sample_ordering[sample]] = labels[index]
+  for index_1, group in enumerate(sample_groups):
+
+    #check if an element of a group is a set of samples corresponding to a label/-s, an index or a sample_id
+    if type(group[0]) == str:
+      if reference_labels is None:
+        raise Exception('no reference dictionary provided, but samples selected according to label')
+      samples = []
+      for label in group:
+        samples += reference_labels[label]
+    else:
+      samples = group
+      for index_2, sample in enumerate(group):
+        if type(sample) == int:
+          samples[index_2] = sample_ordering[sample] # this checks if sample was inputed as an index in sample ordering or by name. If by index, convert to sample_id.
+
+    for sample in samples:
+      sample_labels_dict[sample] = labels[index_1]
       used_samples.append(sample)
-  print('index')
-  if len(used_samples) < len(sample_ordering):
-    unused_samples = list(set(range(len(sample_ordering))) - set(used_samples))
+  if (len(used_samples) < len(sample_ordering)) and (len(sample_groups) == len(labels)-1):
+    unused_samples = list((set(sample_ordering)) - set(used_samples))
     for sample in unused_samples:
-      sample_labels_dict[sample_ordering[sample]] = labels[index + 1]
+      sample_labels_dict[sample] = labels[index_1 + 1]
 
   return sample_labels_dict
 
