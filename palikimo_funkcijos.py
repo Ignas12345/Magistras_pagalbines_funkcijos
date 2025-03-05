@@ -7,47 +7,67 @@ def create_labels_dict(sample_list, labels_df, slice_for_samples = slice(12), ro
       label_dict[sample] = labels_df.loc[row_of_labels_df, sample[slice_for_samples]]
   return label_dict
 
-def create_custom_labels(sample_groups: list, labels: list | dict, sample_ordering: array, reference_labels: dict | None = None):
+def create_custom_labels(group_label_dict: dict, sample_ordering: np.ndarray | None = None, reference_labels_dict: dict | None = None, remaining_label: str | None = None):
   #sample ordering is array with each element being a string corresponding to sample id
-  #here samples should be inputed as indices in sample ordering or as group corresponding to a label in reference labels.
+  #here samples should be inputed as sample_ids, indices in sample ordering or as group corresponding to a label in reference labels.
   #reference_labels dict should be samples_labels_dict - i.e., samples are keys and labels are values. This type of dict should generally be used as input to functions.
-  #sample_groups is list of lists
+  # group_label dict has sample groups as keys (each key/group should be a tuple) and labels to be assgined to that group as values.
+  # remainig label can be used to set a label that will be assigned to otherwise unmetioned samples that will assign the remaining samples (the ones not mentioned explicitly as groups in group_label dict)
 
-  sample_labels_dict = {}
-  if type(labels) == dict:
-    labels  = list(labels.keys())
-  
+  new_sample_labels_dict = {}
+  sample_groups = group_label_dict.keys()
   used_samples = []
-  if reference_labels is not None:
-    reference_labels = invert_label_dict(reference_labels, original_keys='samples')
+  if type(list(group_label_dict.keys())[0]) != tuple:
+    raise Exception('group_label_dict keys should be tuples, even if they contain single elements')
 
-  if (len(sample_groups) != len(labels)-1) and (len(sample_groups) != len(labels)):
-    raise Exception('mismatch in number of groups and labels')
+  if reference_labels_dict is not None:
+    reference_labels_samples = list(reference_labels_dict.keys())
+    reference_labels_dict = invert_label_dict(reference_labels_dict, original_keys='samples')
+    reference_labels_list = list(reference_labels_dict.keys())
+  else:
+    print('no reference dictionary provided')
+    reference_labels_list = []
 
-  for index_1, group in enumerate(sample_groups):
+  if sample_ordering is None:
+    sample_ordering_not_provided = True
+    print('sample_ordering not provided, using samples from reference dictionary')
+    sample_ordering = reference_labels_samples
+  else:
+    sample_ordering_not_provided = False
 
-    #check if an element of a group is a set of samples corresponding to a label/-s, an index or a sample_id
-    if type(group[0]) == str:
-      if reference_labels is None:
-        raise Exception('no reference dictionary provided, but samples selected according to label')
-      samples = []
-      for label in group:
-        samples += reference_labels[label]
-    else:
-      samples = group
-      for index_2, sample in enumerate(group):
-        if type(sample) == int:
-          samples[index_2] = sample_ordering[sample] # this checks if sample was inputed as an index in sample ordering or by name. If by index, convert to sample_id.
+  for group in sample_groups:
+    samples = []
+    for element in group:
+
+      if type(element) == str and (element in reference_labels_list): #in this case element of a group is a label that will retrieve a set of samples from the reference_labels dict
+        old_label = element
+        samples += reference_labels_dict[old_label]
+
+      elif type(element) == str and (element in sample_ordering): #in this case, we assume that sample_id is provided
+        samples += [element]
+
+      elif type(element) == int: #in this case retrieve sample_id according to sample ordering array
+        if sample_ordering_not_provided:
+          raise Exception('no sample order provided, but samples selected according index of an array')
+        samples += [sample_ordering[element]]
+
+      else:
+        raise Warning('element ' + element + 'is neither a valid sample, nor a label in the provided arguments - (Check for misspellings or if reference_dictionary/sample_ordering are not provided)')
+
 
     for sample in samples:
-      sample_labels_dict[sample] = labels[index_1]
-      used_samples.append(sample)
-  if (len(used_samples) < len(sample_ordering)) and (len(sample_groups) == len(labels)-1):
-    unused_samples = list((set(sample_ordering)) - set(used_samples))
-    for sample in unused_samples:
-      sample_labels_dict[sample] = labels[index_1 + 1]
+      new_sample_labels_dict[sample] = group_label_dict[group]
+    used_samples += samples
 
-  return sample_labels_dict
+  if remaining_label is not None:
+    if sample_ordering != []:
+      unused_samples = list((set(sample_ordering)) - set(used_samples))
+    else:
+      unused_samples = list((set(reference_labels_samples)) - set(used_samples))
+    for sample in unused_samples:
+      new_sample_labels_dict[sample] = remaining_label
+
+  return new_sample_labels_dict
 
 def create_label_colors(label_list, color_list = None, default_list = ['blue', 'red', 'orange', 'cyan', 'purple', 'black', 'brown', 'yellow']):
   if color_list is None:
