@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 from Magistras_pagalbines_funkcijos.duomenu_paruosimas import *
 
 def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:list|None = None, sample_ordering:list|None = None,
