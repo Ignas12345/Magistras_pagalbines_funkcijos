@@ -252,6 +252,8 @@ def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:li
   df_1 = df_1.copy()
   if df_2 is None:
     df_2 = df_1.copy()
+  else:
+    df_2 = df_2.copy()
 
   if samples_to_use is None:
     samples_to_use = df_1.index.copy()
@@ -332,6 +334,8 @@ def plot_two_features_use_text(df_1, feature_1, feature_2, df_2 = None, use_numb
   df_1 = df_1.copy()
   if df_2 is None:
     df_2 = df_1.copy()
+  else:
+    df_2 = df_2.copy()
 
   if use_numbers and sample_ordering is None:
     raise Exception('sample_ordering should be provided if using numbers to plot')
