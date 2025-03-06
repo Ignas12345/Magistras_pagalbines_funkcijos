@@ -272,7 +272,6 @@ def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:li
     samples_to_use = prepare_sample_list(elements = samples_to_use, sample_names = df_1.index.copy(), label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
 
   if label_color_dict is None:
-    if label_color_dict is None:
     label_color_dict = create_label_colors(sample_label_dict)
   labels_initial = list(label_color_dict.keys())
   labels = [label for label in labels_initial if label in label_sample_dict.keys()]
