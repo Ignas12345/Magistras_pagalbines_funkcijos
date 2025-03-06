@@ -217,6 +217,7 @@ def create_custom_labels(group_label_dict: dict, sample_ordering: np.ndarray | N
   return new_sample_labels_dict
 
 def create_label_colors(labels:list|dict, color_list = None, default_list = ['blue', 'red', 'orange', 'cyan', 'purple', 'black', 'brown', 'yellow', 'gray']):
+  '''labels should be list or sample_label_dict'''
   if(type(labels) == dict):
     label_list = list(set(labels.values()))
   else:
@@ -271,8 +272,10 @@ def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:li
     samples_to_use = prepare_sample_list(elements = samples_to_use, sample_names = df_1.index.copy(), label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
 
   if label_color_dict is None:
-    label_color_dict = create_label_colors(labels)
-  labels = list(label_color_dict.keys())
+    if label_color_dict is None:
+    label_color_dict = create_label_colors(sample_label_dict)
+  labels_initial = list(label_color_dict.keys())
+  labels = [label for label in labels_initial if label in label_sample_dict.keys()]
 
   '''
   x_data = df_1[feature_1].to_numpy()
@@ -352,8 +355,9 @@ def plot_two_features_use_text(df_1, feature_1, feature_2, df_2 = None, use_numb
     samples_to_use = prepare_sample_list(elements = samples_to_use, sample_names = df_1.index.copy(), label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
 
   if label_color_dict is None:
-    label_color_dict = create_label_colors(labels)
-  labels = list(label_color_dict.keys())
+    label_color_dict = create_label_colors(sample_label_dict)
+  labels_initial = list(label_color_dict.keys())
+  labels = [label for label in labels_initial if label in label_sample_dict.keys()]
 
   x_data = df_1[feature_1].copy()
   y_data = df_2[feature_2].copy()
