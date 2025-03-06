@@ -349,7 +349,7 @@ def plot_two_features_use_text(df_1, feature_1, feature_2, df_2 = None, use_numb
   if samples_to_use is None:
     samples_to_use = df_1.index.copy()
   else:
-    samples_to_use = prepare_sample_list(elements = samples_to_use, sample_names = df_1.columns, label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
+    samples_to_use = prepare_sample_list(elements = samples_to_use, sample_names = df_1.index.copy(), label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
 
   if label_color_dict is None:
     label_color_dict = create_label_colors(labels)
