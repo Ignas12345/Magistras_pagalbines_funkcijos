@@ -363,9 +363,17 @@ def plot_two_features_use_text(df_1, feature_1, feature_2, df_2 = None, use_numb
   patches_for_legend = []
 
   if xlim is None:
-    xlim = [min(x_data) - 1000, max(x_data) + 1000]
+    x_min = min(x_data)
+    x_max = max(x_data)
+    print('feature "' +feature_1+ '" ranges from: ' + str(x_min) + ' to ' +str(x_max))
+    buffer = (x_max - x_min)/10
+    xlim = [x_min - buffer, x_max + buffer]
   if ylim is None:
-    ylim = [min(y_data) - 1000, max(y_data) + 1000]
+    y_min = min(y_data)
+    y_max = max(y_data)
+    print('feature "' +feature_2+ '" ranges from: ' + str(y_min) + ' to ' +str(y_max))
+    buffer = (y_max - y_min)/10
+    ylim = [y_min - buffer, y_max + buffer]
 
   for label in labels:
     #used_x = np.array([])
