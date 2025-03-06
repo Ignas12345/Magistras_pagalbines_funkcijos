@@ -268,7 +268,7 @@ def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:li
   label_sample_dict = invert_label_dict(sample_label_dict, original_keys='samples')
 
   if use_all_samples == False:
-    samples_to_use = prepare_sample_list(elements = samples_to_use, sample_names = df_1.columns, label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
+    samples_to_use = prepare_sample_list(elements = samples_to_use, sample_names = df_1.index.copy(), label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
 
   if label_color_dict is None:
     label_color_dict = create_label_colors(labels)
@@ -296,7 +296,7 @@ def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:li
         plt.scatter(x_data.loc[samples_with_label], y_data.loc[samples_with_label], label = label, c = label_color_dict[label])
 
   if samples_to_higlight is not None:
-    samples_to_higlight = prepare_sample_list(elements = samples_to_higlight, sample_names = df_1.columns, label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
+    samples_to_higlight = prepare_sample_list(elements = samples_to_higlight, sample_names = samples_to_use, label_sample_dict = label_sample_dict, sample_ordering = sample_ordering)
     plt.scatter(x_data.loc[samples_to_higlight], y_data.loc[samples_to_higlight], label = 'highlighted', c = 'gold', marker='v')
 
 
