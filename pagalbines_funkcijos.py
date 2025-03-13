@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.decomposition import PCA, FastICA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.preprocessing import StandardScaler
 import matplotlib.patches as mpatches
