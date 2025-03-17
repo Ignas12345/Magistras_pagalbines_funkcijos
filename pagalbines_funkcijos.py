@@ -227,6 +227,12 @@ def create_custom_labels(group_label_dict: dict, sample_ordering: np.ndarray | N
 
   return new_sample_labels_dict
 
+def prepare_labels(samples, label_dict):
+  '''creates label array for use with sklearn'''
+  #label_dict should have samples as keys
+  labels = np.array([label_dict[sample] for sample in samples])
+  return labels
+
 def create_label_colors(labels:list|dict, color_list = None, default_list = ['blue', 'red', 'orange', 'cyan', 'purple', 'black', 'brown', 'yellow', 'gray']):
   '''labels should be list or sample_label_dict'''
   if(type(labels) == dict):
