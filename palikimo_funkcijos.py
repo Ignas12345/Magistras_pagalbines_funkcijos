@@ -120,3 +120,70 @@ def plot_expressions_two_features(df_1, feature_1, feature_2, sample_ordering, d
   if title is not None:
     plt.title(title)
   plt.show()
+
+def perform_method(model, data_df: str | np.ndarray | None = None, supervised = False, sample_label_dict: dict | None = None, transpose_df=False, center_data: bool = True, scale_data: bool = False,
+                              return_model=False, outliers_to_filter = None, use_original_feature_names = False, scale_back = False):
+    """
+    Performs dimensionality reduction using the provided model.
+    The input data should have observations per row and features per column.
+    Scale data can either be True/False. If the data is not centered, then it will also not be scaled.
+    """
+    if isinstance(data_df, str):
+        print('Using array from URL - there may be errors if it is not the right format')
+        data_df = pd.read_csv(data_df, index_col=0)
+    if transpose_df:
+        data_df = data_df.T
+    feature_names = data_df.columns
+    sample_ids = data_df.index
+    data_array = data_df.to_numpy()
+
+    if scale_data and center_data:
+        scaler = StandardScaler()
+        data_array = scaler.fit_transform(data_array)
+    elif center_data:
+        scaler = StandardScaler(with_std=False)
+        data_array = scaler.fit_transform(data_array)
+    elif scale_data:
+        raise ValueError("data should not be scaled, unless first centered (set center_data to True)")
+
+    if outliers_to_filter is not None:
+        mask = [sample not in outliers_to_filter for sample in sample_ids]
+        data_for_training = data_array[mask]
+        sample_ids_for_training = sample_ids[mask]
+        print('filtered samples for training phase: ' + str(outliers_to_filter))
+    else:
+        data_for_training = data_array
+        sample_ids_for_training = sample_ids
+
+    if supervised:
+        if sample_label_dict is None:
+            raise ValueError("Supervised models require a label dictionary.")
+        labels = np.array([sample_label_dict[sample] for sample in sample_ids_for_training])
+
+        model.fit(data_for_training, labels)
+    else:
+        model.fit(data_for_training)
+
+    transformed_data = model.transform(data_array)
+
+    if scale_back:
+        transformed_data = scaler.inverse_transform(transformed_data)
+
+    if use_original_feature_names:
+        transformed_df = pd.DataFrame(data=transformed_data, columns=feature_names[model.support_], index=sample_ids)
+    else:
+      transformed_df = pd.DataFrame(data=transformed_data, columns=[f'Component {i+1}' for i in range(transformed_data.shape[1])], index=sample_ids)
+
+    tuple_to_return = (transformed_df,)
+    message_return_tuple = f'Returning tuple: (transformed_data_df'
+
+    if return_model:
+        tuple_to_return += (model,)
+        message_return_tuple += ', model'
+
+    if len(tuple_to_return) == 1:
+      print('Returning transformed data')
+      return tuple_to_return[0]
+
+    print(message_return_tuple + ')')
+    return tuple_to_return
