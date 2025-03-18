@@ -251,7 +251,7 @@ def create_label_colors(labels:list|dict, color_list = None, default_list = ['bl
 
 def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:list|None = None, sample_ordering:list|None = None,
                                   sample_label_dict : dict = None, label_color_dict = None, samples_to_higlight: list|None = None,
-                                  xlim = None, ylim = None, show_legend = True, title = None, slice_for_samples:slice = None, use_numbers:bool = None):
+                                  xlim = None, ylim = None, show_legend = True, title = None, slice_for_samples:slice = None, use_numbers:bool = None, save_plot=False):
   #paima df, kuriu rows yra observazijos ir padaro dvieju bruozu plot'a.
   #label_dict turėtų turėti sample_ids kaip raktus ir etiketes kaip values
   #slice_for_samples, use_numbers argumentai yra naudojami kitame funckijos variante - ten kur su tekstu plotinna - cia jie nereikalingi
@@ -267,6 +267,7 @@ def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:li
 
   #nuo cia assuminam, kad samples abiejose df yra isrikiuoti pagal ta tvarka arba kad meginiu pavadinimai naudojami
   '''
+  plt.figure()
   df_1 = df_1.copy()
   if df_2 is None:
     df_2 = df_1.copy()
@@ -330,11 +331,16 @@ def plot_two_features(df_1, feature_1, feature_2, df_2 = None, samples_to_use:li
     plt.ylim(ylim)
   if title is not None:
     plt.title(title)
+  if save_plot:
+    if title is not None:
+      plt.savefig(f'{title}.png')
+    else:
+      plt.savefig(f'{feature_1}_{feature_2}.png')
   plt.show()
 
 def plot_two_features_use_text(df_1, feature_1, feature_2, df_2 = None, use_numbers = False, slice_for_samples:slice = None, samples_to_use:list|None = None, sample_ordering:list|None = None,
                                   sample_label_dict : dict = None, label_color_dict = None,
-                                  xlim = None, ylim = None, show_legend = True, title = None):
+                                  xlim = None, ylim = None, show_legend = True, title = None, save_plot = False):
   '''kaip kita plottinim'o funkcija, bet naudoja teksta arba skaicius vietoj tasku.'''
   #paima df, kuriu rows yra observazijos ir padaro dvieju bruozu plot'a.
   #label_dict turėtų turėti sample_ids kaip raktus ir etiketes kaip values
@@ -430,12 +436,17 @@ def plot_two_features_use_text(df_1, feature_1, feature_2, df_2 = None, use_numb
   plt.ylabel(feature_2)
   if title is not None:
     plt.title(title)
+  if save_plot:
+    if title is not None:
+      plt.savefig(f'{title}.png')
+    else:
+      plt.savefig(f'{feature_1}_{feature_2}.png')
 
   plt.show()
 
 def plot_single_feature(df, feature, samples_to_use:list|None = None, noise_level = 0.05, sample_ordering:list|None = None,
                                   sample_label_dict : dict = None, label_color_dict = None, samples_to_higlight: list|None = None,
-                                  xlim = None, ylim = None, show_legend = True, title = None, slice_for_samples:slice = None, use_numbers:bool = None, random_seed = 42):
+                                  xlim = None, ylim = None, show_legend = True, title = None, slice_for_samples:slice = None, use_numbers:bool = None, save_plot = False, random_seed = 42):
   #paima df, kuriu rows yra observazijos ir padaro vieno bruozo plot'a su trupuciu triuksmo.
   #label_dict turėtų turėti sample_ids kaip raktus ir etiketes kaip values
   #slice_for_samples, use_numbers argumentai yra naudojami kitame funckijos variante - ten kur su tekstu plotinna - cia jie nereikalingi
@@ -499,11 +510,16 @@ def plot_single_feature(df, feature, samples_to_use:list|None = None, noise_leve
     plt.ylim(ylim)
   if title is not None:
     plt.title(title)
+  if save_plot:
+    if title is not None:
+      plt.savefig(f'{title}.png')
+    else:
+      plt.savefig(f'{feature_1}_{feature_2}.png')
   plt.show()
 
 def plot_single_feature_use_text(df, feature, samples_to_use:list|None = None, noise_level = 0.05, sample_ordering:list|None = None,
                                   sample_label_dict : dict = None, label_color_dict = None, samples_to_higlight: list|None = None,
-                                  xlim = None, ylim = None, show_legend = True, title = None, slice_for_samples:slice = None, use_numbers:bool = None, random_seed=42):
+                                  xlim = None, ylim = None, show_legend = True, title = None, slice_for_samples:slice = None, use_numbers:bool = None, save_plot = False, random_seed=42):
   '''kaip kita plottinim'o funkcija, bet naudoja teksta arba skaicius vietoj tasku.'''
   #paima df, kuriu rows yra observazijos ir padaro dvieju bruozu plot'a.
   #label_dict turėtų turėti sample_ids kaip raktus ir etiketes kaip values
@@ -582,7 +598,11 @@ def plot_single_feature_use_text(df, feature, samples_to_use:list|None = None, n
   plt.ylabel('noise of level: ' + str(noise_level))
   if title is not None:
     plt.title(title)
-
+  if save_plot:
+    if title is not None:
+      plt.savefig(f'{title}.png')
+    else:
+      plt.savefig(f'{feature_1}_{feature_2}.png')
   plt.show()
 
 def perform_method(model, data_df: str | np.ndarray | None = None, supervised = False, sample_label_dict: dict | None = None, data_array: np.ndarray | None = None,
@@ -646,3 +666,15 @@ def perform_method(model, data_df: str | np.ndarray | None = None, supervised = 
     print(message_return_tuple + ')')
     return tuple_to_return
 
+def read_feature_ranking_df(url):
+  #sekancios dvi funkcijos is esmes tam, kad kablelius mirnu pavadinimuose pakeistu underscorai's. Nors gal to ir nereikia?
+  df = pd.read_csv(url)
+  #change "_" to "," in "Feature" column:
+  df['Feature'] = df['Feature'].str.replace('_', ',')
+  df = df.set_index('Feature')
+  return df
+
+def write_feature_ranking_df(df, file_name):
+  #change "," to "_" in "Feature" column:
+  df.index = df.index.str.replace(',', '_')
+  df.to_csv(file_name+'.csv')
