@@ -117,7 +117,23 @@ def prepare_sample_list(elements, sample_names:list = None, label_sample_dict:di
       else:
         raise Warning('sample ' + element + 'is neither a valid sample, nor a label in the provided arguments - (Check for misspellings or if valid dictionaries, namings are provided)')
 
-  return samples_to_return  
+  return samples_to_return
+
+def shuffle_columns(df: pd.DataFrame, seed: int = None) -> pd.DataFrame:
+    """
+    Shuffle the columns of a DataFrame randomly.
+
+    Parameters:
+        df (pd.DataFrame): The input DataFrame.
+        seed (int, optional): Random seed for reproducibility. Default is None.
+
+    Returns:
+        pd.DataFrame: DataFrame with shuffled columns.
+    """
+    if seed is not None:
+        np.random.seed(seed)
+    shuffled_columns = np.random.permutation(df.columns)
+    return df[shuffled_columns].copy()
 
 def check_labels(sample_list, sample_label_dict, sample_ordering = None):
   '''function that takes as input sample names and outputs their labels and optionally indices in a sample ordering array'''
