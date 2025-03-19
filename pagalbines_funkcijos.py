@@ -119,6 +119,14 @@ def prepare_sample_list(elements, sample_names:list = None, label_sample_dict:di
 
   return samples_to_return  
 
+def check_labels(sample_list, sample_label_dict, sample_ordering = None):
+  '''function that takes as input sample names and outputs their labels and optionally indices in a sample ordering array'''
+  for i, sample in enumerate(prepare_sample_list(elements = sample_list, sample_ordering=sample_ordering)):
+    if sample_ordering is not None:
+      print(str(np.where(sample_ordering == sample)[0]) +', '+sample +': '+labels_1[sample])
+    else:
+      print(sample +': '+sample_label_dict[sample])
+
 def create_labels_from_df(labels_df: str | pd.DataFrame, sample_list: list | None = None, slice_for_samples = slice(12), feature_to_use = None, row_of_labels_df = 0, return_labels_samples = False, delete_empty_keys = False):
   labels_samples_dict = {}
   samples_labels_dict = {}
