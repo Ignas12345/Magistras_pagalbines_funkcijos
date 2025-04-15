@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 '''Funkcijų sąrašas:
 format_data_frame, prepare_sample_list, create_labels_from_df, create_custom_labels, invert_label_dict, create_label_colors,
-plot_two_features, plot_two_features_use_text'''
+plot_two_features, plot_two_features_use_text ir daugiau...'''
 
 def format_data_frame(df:str|pd.DataFrame, chars_slice = None,
                       sample_order = None, return_numpy = False, has_features = True,
@@ -86,6 +86,36 @@ def format_data_frame(df:str|pd.DataFrame, chars_slice = None,
   print('returning: ' + returns_for_print)
 
   return tuple_to_return
+
+def collapse_columns_by_string(df, string_slice=slice(-1, -12, -1)):
+    """
+    Collapses columns in a DataFrame based on matching string of column names (last `string_len` characters).
+
+    Args:
+        df (pd.DataFrame): DataFrame with features as columns and samples as rows.
+        
+
+    Returns:
+        pd.DataFrame: DataFrame with collapsed columns (features), summed across matching key_strings.
+    """
+
+    key_strings = df.columns.to_series().str[string_slice]
+    # Group column names by their string
+    grouped = {}
+    for string in key_strings.unique():
+        cols = key_strings[key_strings == string].index.tolist()
+        grouped[string] = cols
+
+    # Build new DataFrame with collapsed columns
+    collapsed_data = {}
+    for string, cols in grouped.items():
+        # Sum across the columns that match this string
+        collapsed_data[cols[0]] = df[cols].sum(axis=1)
+
+    # Construct new DataFrame
+    collapsed_df = pd.DataFrame(collapsed_data)
+
+    return collapsed_df
 
 def filter_samples(df, samples_to_filter):
     mask = [sample not in samples_to_filter for sample in df.index]
@@ -502,7 +532,12 @@ def plot_single_feature(df, feature, samples_to_use:list|None = None, noise_leve
 
   x_data = df[feature]
   y_data = df['noise']
-  ylim = [-1, 1]
+                                    
+  if ylim is None:
+    y_min = min(y_data)
+    y_max = max(y_data)
+    buffer = (y_max - y_min)/10
+    ylim = [y_min - buffer, y_max + buffer]
 
   plt.figure()
 
@@ -574,7 +609,12 @@ def plot_single_feature_use_text(df, feature, samples_to_use:list|None = None, n
 
   x_data = df[feature].copy()
   y_data = df['noise'].copy()
-  ylim = [-1, 1]
+                                    
+  if ylim is None:
+    y_min = min(y_data)
+    y_max = max(y_data)
+    buffer = (y_max - y_min)/10
+    ylim = [y_min - buffer, y_max + buffer]
 
   plt.figure()
   used_labels = []
