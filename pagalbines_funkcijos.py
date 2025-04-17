@@ -3,13 +3,16 @@ import pandas as pd
 from sklearn.decomposition import PCA, FastICA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import spearmanr
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 
 
 '''Funkcijų sąrašas:
-format_data_frame, prepare_sample_list, create_labels_from_df, create_custom_labels, invert_label_dict, create_label_colors,
-plot_two_features, plot_two_features_use_text ir daugiau...'''
+format_data_frame, collapse_columns_by_string, filter_samples, filter_features, prepare_sample_list, shuffle_columns, calc_corr_for_sing_feat,
+check_labels, create_labels_from_df, invert_label_dict, create_custom_labels, prepare_labels, create_label_colors,
+plot_two_features, plot_two_features_use_text, plot_single_feature, plot_single_feature_use_text, perform_method,
+read_feature_ranking_df, write_feature_ranking_df'''
 
 def format_data_frame(df:str|pd.DataFrame, chars_slice = None,
                       sample_order = None, return_numpy = False, has_features = True,
@@ -164,6 +167,33 @@ def shuffle_columns(df: pd.DataFrame, seed: int = None) -> pd.DataFrame:
         np.random.seed(seed)
     shuffled_columns = np.random.permutation(df.columns)
     return df[shuffled_columns].copy()
+
+def calc_corr_for_sing_feat(feature, df, feature_name = None, method = 'spearman'):
+
+  #get name of feature and feature expressions
+  if feature_name is None:
+    if type(feature) == str:
+      feature_name = feature
+      feature = df[feature]
+    else:
+      feature_name = feature.name
+
+  #choose method
+  if method == 'spearman':
+    corr_func = spearmanr
+  else:
+    raise ValueError('only supported methods are: spearman')
+
+  #calculate correlations with features in the df
+  correlation_df = pd.DataFrame(columns=df.columns)
+  p_value_df = pd.DataFrame(columns=df.columns)
+  for col in df.columns:
+    expression_array = df[col]
+    correlation, p_value = corr_func(feature, expression_array)
+    correlation_df.loc[feature_name,col] = correlation
+    p_value_df.loc[feature_name, col] = p_value
+
+  return correlation_df.T, p_value_df.T
 
 def check_labels(sample_list, sample_label_dict, sample_ordering = None):
   '''function that takes as input sample names and outputs their labels and optionally indices in a sample ordering array'''
@@ -742,3 +772,5 @@ def write_feature_ranking_df(df, file_name):
   #change "," to "_" in "Feature" column:
   df.index = df.index.str.replace(',', '_')
   df.to_csv(file_name+'.csv')
+
+
