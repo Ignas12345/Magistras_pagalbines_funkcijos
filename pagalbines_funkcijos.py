@@ -197,9 +197,9 @@ def calc_corr_for_sing_feat(feature, df, feature_name = None, method = 'spearman
 
 def check_labels(sample_list, sample_label_dict, sample_ordering = None):
   '''function that takes as input sample names and outputs their labels and optionally indices in a sample ordering array'''
-  for i, sample in enumerate(prepare_sample_list(elements = sample_list, sample_ordering=sample_ordering)):
+  for i, sample in enumerate(prepare_sample_list(elements = sample_list, sample_names=sample_label_dict.index, sample_ordering=sample_ordering)):
     if sample_ordering is not None:
-      print(str(np.where(sample_ordering == sample)[0]) +', '+sample +': '+labels_1[sample])
+      print(str(np.where(sample_ordering == sample)[0]) +', '+sample +': '+sample_label_dict[sample])
     else:
       print(sample +': '+sample_label_dict[sample])
 
@@ -603,7 +603,7 @@ def plot_single_feature(df, feature, samples_to_use:list|None = None, noise_leve
     if title is not None:
       plt.savefig(f'{title}.png')
     else:
-      plt.savefig(f'{feature_1}_{feature_2}.png')
+      plt.savefig(f'{feature}.png')
   plt.show()
 
 def plot_single_feature_use_text(df, feature, samples_to_use:list|None = None, noise_level = 0.05, sample_ordering:list|None = None,
@@ -643,7 +643,7 @@ def plot_single_feature_use_text(df, feature, samples_to_use:list|None = None, n
   if ylim is None:
     y_min = min(y_data)
     y_max = max(y_data)
-    buffer = (y_max - y_min)/10
+    buffer = (y_max - y_min)
     ylim = [y_min - buffer, y_max + buffer]
 
   plt.figure()
@@ -696,7 +696,7 @@ def plot_single_feature_use_text(df, feature, samples_to_use:list|None = None, n
     if title is not None:
       plt.savefig(f'{title}.png')
     else:
-      plt.savefig(f'{feature_1}_{feature_2}.png')
+      plt.savefig(f'{feature}.png')
   plt.show()
 
 def perform_method(model, data_df: str | np.ndarray | None = None, supervised = False, sample_label_dict: dict | None = None, data_array: np.ndarray | None = None,

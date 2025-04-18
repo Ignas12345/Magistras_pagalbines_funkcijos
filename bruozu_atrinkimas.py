@@ -1,10 +1,11 @@
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold, cross_val_score
 from copy import deepcopy
 import numpy as np
 from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import LeaveOneOut
+from sklearn.model_selection import LeaveOneOut, StratifiedKFold, cross_val_score
+from scipy.stats import ttest_ind
+from statsmodels.stats.multitest import fdrcorrection
 from tqdm import tqdm
 
 #ChatGPT funkcija
@@ -244,3 +245,52 @@ def loo_cv(X_cv, y_cv, final_classifier, label_dict = None, seed = 42):
           print(sample + ' label is: ' + label_dict[sample] + '\n')
 
   return results_df
+
+def perform_DE_test(df_to_use, group1_samples, group2_samples):
+    # Extract expression data for the two groups
+    data1 = df_to_use.loc[group1_samples].copy()
+    data2 = df_to_use.loc[group2_samples].copy()
+
+    # Perform unpaired t-test
+    p_vals = []
+    fold_changes = []
+    for feature in df_to_use.columns:
+        vals1 = data1[feature].values.astype(float)
+        vals2 = data2[feature].values.astype(float)
+        t_stat, p = ttest_ind(vals1, vals2, equal_var=False)
+        p_vals.append(p)
+
+        fc = np.median(vals1 + 1) / np.median(vals2 + 1)
+        if fc < 1:
+            fc =  - 1 / fc
+        # Median-based fold change
+        #fold_changes.append(np.log2(fc))  # log2 FC
+        fold_changes.append(fc)
+
+    # FDR correction
+    reject, p_adj = fdrcorrection(p_vals, alpha=0.05)
+    results = pd.DataFrame({
+        'feature': df_to_use.columns,
+        'Fold Change': fold_changes,
+        'pval': p_vals,
+        'fdr': p_adj,
+        'significant': reject
+    })
+
+    return results
+
+def get_top_DE_features(DE_results, n_features_to_return = 17, return_separately = False, ignore_p_value = False):
+  #n_features_to_return is the number of upregulated and of downregulated features that will be returned
+  
+  if ignore_p_value == False:
+    sig_results = DE_results[DE_results['significant']].copy()
+  else:
+    sig_results = DE_results.copy()
+
+  top_up = sig_results.sort_values("Fold Change", ascending=False).head(n_features_to_return)
+  top_down = sig_results.sort_values("Fold Change").head(n_features_to_return)[::-1]
+  top_features = pd.concat([top_up, top_down])
+
+  if return_separately:
+    return top_up, top_down
+  return top_features
