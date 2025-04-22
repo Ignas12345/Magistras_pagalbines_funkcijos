@@ -128,7 +128,7 @@ def filter_features(df, features_to_filter):
     mask = [feature not in features_to_filter for feature in df.columns]
     return df.loc[:, mask].copy()
 
-def prepare_sample_list(elements, sample_names:list = None, label_sample_dict:dict = None, sample_ordering: np.ndarray = None):
+def prepare_sample_list(elements, sample_names:list = None, label_sample_dict:dict = None, sample_ordering: np.ndarray = None, sample_label_dict = None):
   '''checks elements against sample_names, a label dictionary and a sample ordering. Returns a list of sample names. At least one of
   sample_names, label_sample_dict or sample_ordering should be provided'''
   samples_to_return = []
@@ -136,7 +136,10 @@ def prepare_sample_list(elements, sample_names:list = None, label_sample_dict:di
   if sample_names is None:
     sample_names = []
   if label_sample_dict is None:
-    label_sample_dict = {}
+    if sample_label_dict is None:
+      label_sample_dict = {}
+    else:
+      label_sample_dict = invert_label_dict(sample_label_dict, original_keys='samples')
 
   for element in elements:
       if element in sample_names:
@@ -148,7 +151,7 @@ def prepare_sample_list(elements, sample_names:list = None, label_sample_dict:di
           raise Exception('sample_ordering not provided, but sample inputted as a numerical index')
         samples_to_return.append(sample_ordering[element])
       else:
-        raise Warning('sample ' + element + 'is neither a valid sample, nor a label in the provided arguments - (Check for misspellings or if valid dictionaries, namings are provided)')
+        raise Warning('sample ' + element + ' is neither a valid sample, nor a label in the provided arguments - (Check for misspellings or if valid dictionaries, namings are provided)')
 
   return samples_to_return
 
