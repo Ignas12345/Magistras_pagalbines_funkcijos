@@ -128,6 +128,23 @@ def filter_features(df, features_to_filter):
     mask = [feature not in features_to_filter for feature in df.columns]
     return df.loc[:, mask].copy()
 
+def feature_filtering_by_class_means(df_to_use, class1_samples, class2_samples, class1_name = '1', class2_name = '2', threshold_to_keep = 45):
+'''paprasta funkcija, kuri atlieka bruozu filtravima pagal meginius ir ju klases (tureti omenyje, kokia df naudojame - gali būti, kad netinka)'''
+    # Extract expression data for the two classs
+    data1 = df_to_use.loc[class1_samples].copy()
+    data2 = df_to_use.loc[class2_samples].copy()
+
+    #leave only the features that reach 50 (45 for safety) RPM in any of the classes
+    features_to_keep_1 = [feature for feature in data1.columns if data1[feature].mean() >= 45]
+    features_to_keep_2 = [feature for feature in data2.columns if data2[feature].mean() >= 45]
+    features_to_keep = list(set(features_to_keep_1).union(set(features_to_keep_2)))
+
+    print('number of features expressed above ' + str(threshold_to_keep)+' in class ' +class1_name+ ': ' + str(len(features_to_keep_1)))
+    print('number of features expressed above ' + str(threshold_to_keep)+' in class ' +class2_name+ ': ' + str(len(features_to_keep_2)))
+    print('number of features in kept across both classes: ' + str(len(features_to_keep)))
+
+    return features_to_keep
+
 def prepare_sample_list(elements, sample_names:list = None, label_sample_dict:dict = None, sample_ordering: np.ndarray = None, sample_label_dict = None):
   '''checks elements against sample_names, a label dictionary and a sample ordering. Returns a list of sample names. At least one of
   sample_names, label_sample_dict or sample_ordering should be provided'''
