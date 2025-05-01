@@ -128,8 +128,8 @@ def filter_features(df, features_to_filter):
     mask = [feature not in features_to_filter for feature in df.columns]
     return df.loc[:, mask].copy()
 
-def feature_filtering_by_class_means_of_raw_counts_df(df_to_use, class1_samples, class2_samples, class1_name = '1', class2_name = '2', threshold_to_keep = 45):
-    '''paprasta funkcija, kuri atlieka bruozu filtravima pagal meginius ir ju klases (tureti omenyje, kokia df naudojame - gali būti, kad netinka)'''
+def feature_filtering_by_class_means(df_to_use, class1_samples, class2_samples, class1_name = '1', class2_name = '2', threshold_to_keep = 45):
+    '''paprasta funkcija, kuri atlieka bruozu filtravima pagal meginius ir ju klases.'''
     # Extract expression data for the two classs
     data1 = df_to_use.loc[class1_samples].copy()
     data2 = df_to_use.loc[class2_samples].copy()
