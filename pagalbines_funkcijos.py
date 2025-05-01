@@ -263,6 +263,18 @@ def invert_label_dict(dict_to_invert, original_keys: str):
 
   return inverted_dict
 
+def divide_samples_into_classes(samples, sample_label_dict):
+  '''Panasiai kaip invert_label_dict funkcija, tik cia tu dar paduodi meginiu sarasa - padeda jeigu naudoji arba ne visus meginius, arba meginiai kartojasi.'''
+  new_label_sample_dict = {}
+  for label in set(sample_label_dict.values()):
+    new_label_sample_dict[label] = []
+
+  for sample in samples:
+    label = sample_label_dict[sample]
+    new_label_sample_dict[label].append(sample)
+
+  return new_label_sample_dict
+
 def create_custom_labels(group_label_dict: dict, sample_ordering: np.ndarray | None = None, reference_labels_dict: dict | None = None, remaining_label: str | None = None, use_reference_for_remaining:bool = False):
   # sita funkcija skirta susikurti savam etikeciu zodnynui
   # sample ordering is array with each element being a string corresponding to sample id
