@@ -134,13 +134,13 @@ def feature_filtering_by_class_means(df_to_use, class1_samples, class2_samples, 
     data1 = df_to_use.loc[class1_samples].copy()
     data2 = df_to_use.loc[class2_samples].copy()
 
-    #leave only the features that reach 50 (45 for safety) RPM in any of the classes
-    features_to_keep_1 = [feature for feature in data1.columns if data1[feature].mean() >= 45]
-    features_to_keep_2 = [feature for feature in data2.columns if data2[feature].mean() >= 45]
+    #By default leave only the features that reach 50 (45 for safety) RPM in any of the classes
+    features_to_keep_1 = [feature for feature in data1.columns if data1[feature].mean() >= threshold_to_keep]
+    features_to_keep_2 = [feature for feature in data2.columns if data2[feature].mean() >= threshold_to_keep]
     features_to_keep = list(set(features_to_keep_1).union(set(features_to_keep_2)))
 
-    print('number of features expressed above ' + str(threshold_to_keep)+' in class ' +class1_name+ ': ' + str(len(features_to_keep_1)))
-    print('number of features expressed above ' + str(threshold_to_keep)+' in class ' +class2_name+ ': ' + str(len(features_to_keep_2)))
+    print('number of features expressed (in mean) above ' + str(threshold_to_keep)+' in class ' +class1_name+ ': ' + str(len(features_to_keep_1)))
+    print('number of features expressed (in mean) above ' + str(threshold_to_keep)+' in class ' +class2_name+ ': ' + str(len(features_to_keep_2)))
     print('number of features in kept across both classes: ' + str(len(features_to_keep)))
 
     return features_to_keep
