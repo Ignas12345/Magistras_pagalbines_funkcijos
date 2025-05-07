@@ -8,6 +8,26 @@ from scipy.stats import ttest_ind
 from statsmodels.stats.multitest import fdrcorrection
 from tqdm import tqdm
 
+def helper_ffs_calculate_mean_training_score(X, y, classifier, skf):
+    """
+    Helper function for forward_feature_selection_cv that calculates the mean training score for the given features and labels using a given instance of StratifiedKFold.
+
+    Parameters:
+        X (pd.DataFrame): The feature set.
+        y (pd.Series or array-like): The labels.
+        classifier: The scikit-learn classifier to be used.
+        skf (StratifiedKFold): The StratifiedKFold object for splitting.
+
+    Returns:
+        float: The mean training score across all folds.
+    """
+    training_scores = []
+    for train_idx, _ in skf.split(X, y):
+        classifier.fit(X.iloc[train_idx], np.array(y)[train_idx])
+        training_scores.append(classifier.score(X.iloc[train_idx], np.array(y)[train_idx]))
+    return np.mean(training_scores)
+
+# Updated function (mostly written by ChatGPT)
 def forward_feature_selection_cv(X_cv, y_cv, classifier, max_features=20, allow_n_rounds_without_improvement=5, n_splits=5, seed=42):
     """
     Perform forward feature selection over the provided set of candidate features
@@ -16,7 +36,7 @@ def forward_feature_selection_cv(X_cv, y_cv, classifier, max_features=20, allow_
 
     Parameters:
         X_cv (pd.DataFrame): The dataframe containing the candidate features (columns).
-        y_cv (array-like): The labels corresponding to the rows in X_cv.
+        y_cv (pd.Series or array-like): The labels corresponding to the rows in X_cv.
         classifier: The scikit-learn classifier to be used.
         max_features (int): Maximum number of features to include. The default is 20.
         allow_n_rounds_without_improvement (int): Number of rounds without improvement before stopping.
@@ -25,7 +45,6 @@ def forward_feature_selection_cv(X_cv, y_cv, classifier, max_features=20, allow_
 
     Returns:
         best_feature_set (list): List of feature names that produced the best CV score.
-        performance_history (list of dicts): A log of performance at each round.
     """
     candidate_features = list(X_cv.columns)
     current_features = []
@@ -52,46 +71,26 @@ def forward_feature_selection_cv(X_cv, y_cv, classifier, max_features=20, allow_
         best_feature_this_round = None
 
         for feature in remaining_features:
-
             temp_features = current_features + [feature]
-
-            # Calculate mean cross-validation score
             X_sub = X_cv[temp_features]
             cv_scores = cross_val_score(classifier, X_sub, y_cv, cv=skf)
             mean_cv_score = cv_scores.mean()
-
 
             if mean_cv_score > best_cv_score_this_round:
                 best_cv_score_this_round = mean_cv_score
                 best_feature_this_round = feature
 
             if mean_cv_score == best_cv_score_this_round and best_feature_this_round is not None:
-                # If CV score is the same, prefer the feature with the best training score
-
-                # If best_training_score_this_round is 0.0, we need to calculate it using the current set + best_feature_this_round
                 if best_training_score_this_round == 0.0:
-                    # Calculate training score using best feature set this round (yet)
                     X_sub_2 = X_cv[current_features + [best_feature_this_round]]
-                    training_scores = []
-                    for train_idx, test_idx in skf.split(X_sub_2, y_cv):
-                        classifier.fit(X_sub_2.iloc[train_idx], y_cv[train_idx])
-                        training_scores.append(classifier.score(X_sub_2.iloc[train_idx], y_cv[train_idx]))
-                    best_training_score_this_round = np.mean(training_scores)
+                    best_training_score_this_round = helper_ffs_calculate_mean_training_score(X_sub_2, y_cv, classifier, skf)
 
+                mean_training_score = helper_ffs_calculate_mean_training_score(X_sub, y_cv, classifier, skf)
 
-                # Calculate training score (mean of training fold accuracy) using the current set + feature
-                training_scores = []
-                for train_idx, test_idx in skf.split(X_sub, y_cv):
-                    classifier.fit(X_sub.iloc[train_idx], y_cv[train_idx])
-                    training_scores.append(classifier.score(X_sub.iloc[train_idx], y_cv[train_idx]))
-                mean_training_score = np.mean(training_scores)
-
-                # Check if training score is better than the previous training scores that had CV score of 1.0
                 if mean_training_score > best_training_score_this_round:
                     best_feature_this_round = feature
                     best_training_score_this_round = mean_training_score
 
-        #hopefully this condtion is never met
         if best_feature_this_round is None:
             print("Adding any feature results in cv score of 0.0, stopping.")
             break
@@ -108,16 +107,20 @@ def forward_feature_selection_cv(X_cv, y_cv, classifier, max_features=20, allow_
 
         if (best_cv_score_this_round > best_cv_score_overall) or (best_cv_score_this_round == best_cv_score_overall and best_training_score_this_round > best_training_score_overall):
             best_cv_score_overall = best_cv_score_this_round
+            best_training_score_overall = best_training_score_this_round
             best_feature_set = deepcopy(current_features)
             rounds_without_improvement = 0
+            if best_cv_score_this_round == 1 and best_training_score_this_round == 1:
+                print("No improvement possible on the training data performance")
+                break
         else:
             rounds_without_improvement += 1
 
     print("Forward feature selection completed!")
     print(f"Best feature set ({len(best_feature_set)} features) with CV score: {best_cv_score_overall:.4f} and training score: {best_training_score_overall:.4f}")
-    print(f"Best feature set: {best_feature_set}")
+    #print(f"Best feature set: {best_feature_set}")
 
-    return best_feature_set, performance_history
+    return best_feature_set
     
 #ChatGPT funkcija
 def forward_feature_selection_cv_first_version(X_cv, y_cv, classifier, max_features=20, allow_n_rounds_without_improvement = 3, n_splits=5, seed=42):
